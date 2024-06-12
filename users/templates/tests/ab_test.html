@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AB test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+        #toolbar {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            margin-top: 20px;
+        }
+        #imageContainer {
+            position: relative;
+            margin-top: 20px;
+        }
+        #image {
+            max-width: 80%;
+            max-height: 80vh;
+        }
+        .rectangle {
+            position: absolute;
+            border: 2px solid red;
+            pointer-events: none;
+        }
+        .point {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: green;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="toolbar">
+        <a href="{% url 'home' %}">Назад</a>
+        <button id="loadImage">Load Image</button>
+        <button id="loadTest">Load Test</button>
+        <button id="prevImage">Previous</button>
+        <button id="nextImage">Next</button>
+        <button id="saveProject">Save Project</button>
+        <label><input type="radio" name="mode" value="author" checked> Author</label>
+        <label><input type="radio" name="mode" value="tester"> Tester</label>
+    </div>
+    <div id="imageContainer"></div>
+    <input type="file" id="imageInput" accept="image/png" style="display: none;">
+    <input type="file" id="loadTestInput" accept=".json" style="display: none;">
+    <script>
+        let imageLabels = [];
+        let currentImageIndex = -1;
+        let mode = "author";
+        const imageContainer = document.getElementById('imageContainer');
+        const loadImageButton = document.getElementById('loadImage');
+        const loadTestButton = document.getElementById('loadTest');
+        const prevImageButton = document.getElementById('prevImage');
+        const nextImageButton = document.getElementById('nextImage');
+        const saveProjectButton = document.getElementById('saveProject');
+        const imageInput = document.getElementById('imageInput');
+        const loadTestInput = document.getElementById('loadTestInput');
+
+        loadImageButton.addEventListener('click', () => imageInput.click());
+        loadTestButton.addEventListener('click', () => loadTestInput.click());
+        prevImageButton.addEventListener('click', prevImage);
+        nextImageButton.addEventListener('click', nextImage);
+        saveProjectButton.addEventListener('click', saveProject);
+        document.querySelectorAll('input[name="mode"]').forEach(radio => {
+            radio.addEventListener('change', (e) => mode = e.target.value);
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        addImageLabel(img);
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        loadTestInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = JSON.parse(e.target.result);
+                    loadProject(data);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function addImageLabel(img) {
+            imageLabels.push({ img, rectangles: [], points: [] });
+            if (currentImageIndex !== -1) {
+                imageLabels[currentImageIndex].img.style.display = 'none';
+            }
+            currentImageIndex = imageLabels.length - 1;
+            renderCurrentImage();
+        }
+
+        function renderCurrentImage() {
+            imageContainer.innerHTML = '';
+            const currentLabel = imageLabels[currentImageIndex];
+            imageContainer.appendChild(currentLabel.img);
+            currentLabel.img.style.display = 'block';
+            currentLabel.img.addEventListener('mousedown', onMouseDown);
+            currentLabel.img.addEventListener('mouseup', onMouseUp);
+            currentLabel.img.addEventListener('mousemove', onMouseMove);
+            currentLabel.img.addEventListener('dragstart', (e) => e.preventDefault()); // Prevent image drag
+            drawAnnotations(currentLabel);
+        }
+
+        function drawAnnotations(label) {
+			if (mode === 'author')
+			{
+				label.rectangles.forEach(rect => {
+					const rectDiv = document.createElement('div');
+					rectDiv.className = 'rectangle';
+					rectDiv.style.left = `${rect.left}px`;
+					rectDiv.style.top = `${rect.top}px`;
+					rectDiv.style.width = `${rect.width}px`;
+					rectDiv.style.height = `${rect.height}px`;
+					imageContainer.appendChild(rectDiv);
+				});
+			}
+
+			label.points.forEach(point => {
+				const pointDiv = document.createElement('div');
+				pointDiv.className = 'point';
+				pointDiv.style.left = `${point.x - 4}px`; // Center the point
+				pointDiv.style.top = `${point.y - 4}px`; // Center the point
+				imageContainer.appendChild(pointDiv);
+			});
+        }
+
+        let drawing = false;
+        let startX, startY;
+        let currentRectDiv = null;
+
+        function onMouseDown(e) {
+            if (mode === 'author') {
+                drawing = true;
+                startX = e.offsetX;
+                startY = e.offsetY;
+                currentRectDiv = document.createElement('div');
+                currentRectDiv.className = 'rectangle';
+                currentRectDiv.style.left = `${startX}px`;
+                currentRectDiv.style.top = `${startY}px`;
+                imageContainer.appendChild(currentRectDiv);
+            } else if (mode === 'tester') {
+                const point = { x: e.offsetX, y: e.offsetY };
+                imageLabels[currentImageIndex].points.push(point);
+                drawAnnotations(imageLabels[currentImageIndex]);
+                if (isPointInRectangles(point, imageLabels[currentImageIndex].rectangles)) {
+                    nextImage();
+                }
+            }
+        }
+
+        function onMouseMove(e) {
+            if (mode === 'author' && drawing) {
+                const currentX = e.offsetX;
+                const currentY = e.offsetY;
+                currentRectDiv.style.left = `${Math.min(startX, currentX)}px`;
+                currentRectDiv.style.top = `${Math.min(startY, currentY)}px`;
+                currentRectDiv.style.width = `${Math.abs(currentX - startX)}px`;
+                currentRectDiv.style.height = `${Math.abs(currentY - startY)}px`;
+            }
+        }
+
+        function onMouseUp(e) {
+            if (mode === 'author' && drawing) {
+                drawing = false;
+                const rect = {
+                    left: Math.min(startX, e.offsetX),
+                    top: Math.min(startY, e.offsetY),
+                    width: Math.abs(e.offsetX - startX),
+                    height: Math.abs(e.offsetY - startY)
+                };
+                imageLabels[currentImageIndex].rectangles.push(rect);
+                drawAnnotations(imageLabels[currentImageIndex]);
+                currentRectDiv = null;
+            }
+        }
+
+        function isPointInRectangles(point, rectangles) {
+            return rectangles.some(rect => {
+                return point.x >= rect.left &&
+                       point.x <= rect.left + rect.width &&
+                       point.y >= rect.top &&
+                       point.y <= rect.top + rect.height;
+            });
+        }
+
+        function prevImage() {
+            if (currentImageIndex > 0) {
+                imageLabels[currentImageIndex].img.style.display = 'none';
+                currentImageIndex--;
+                renderCurrentImage();
+            }
+        }
+
+        function nextImage() {
+            if (currentImageIndex < imageLabels.length - 1) {
+                imageLabels[currentImageIndex].img.style.display = 'none';
+                currentImageIndex++;
+                renderCurrentImage();
+            }
+        }
+
+        function saveProject() {
+            const data = imageLabels.map(label => {
+                const canvas = document.createElement('canvas');
+                canvas.width = label.img.width;
+                canvas.height = label.img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(label.img, 0, 0);
+                const imageBase64 = canvas.toDataURL('image/png').split(',')[1];
+                return {
+                    image: imageBase64,
+                    rectangles: label.rectangles,
+                    points: label.points
+                };
+            });
+            const blob = new Blob([JSON.stringify(data, null, 4)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'project.json';
+            link.click();
+        }
+
+        function loadProject(data) {
+            imageLabels = data.map(item => {
+                const img = new Image();
+                img.src = 'data:image/png;base64,' + item.image;
+                return {
+                    img,
+                    rectangles: item.rectangles,
+                    points: item.points
+                };
+            });
+            currentImageIndex = 0;
+            imageLabels[currentImageIndex].img.style.display = 'none';
+            renderCurrentImage();
+        }
+    </script>
+</body>
+</html>
