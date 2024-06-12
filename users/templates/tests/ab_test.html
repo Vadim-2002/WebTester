@@ -43,16 +43,14 @@
     </style>
 </head>
 <body>
-    <div id="toolbar">
+    <form id="toolbar">
         <a href="{% url 'home' %}">Назад</a>
-        <button id="loadImage">Load Image</button>
-        <button id="loadTest">Load Test</button>
-        <button id="prevImage">Previous</button>
-        <button id="nextImage">Next</button>
-        <button id="saveProject">Save Project</button>
-        <label><input type="radio" name="mode" value="author" checked> Author</label>
-        <label><input type="radio" name="mode" value="tester"> Tester</label>
-    </div>
+        <button type="button" id="loadImage">Load Image</button>
+        <button type="button" id="loadTest">Load Test</button>
+        <button type="button" id="prevImage">Previous</button>
+        <button type="button" id="nextImage">Next</button>
+        <button type="button" id="saveProject">Save Project</button>
+    </form>
     <div id="imageContainer"></div>
     <input type="file" id="imageInput" accept="image/png" style="display: none;">
     <input type="file" id="loadTestInput" accept=".json" style="display: none;">
@@ -127,8 +125,7 @@
         }
 
         function drawAnnotations(label) {
-			if (mode === 'author')
-			{
+			{% if user_role == 'author' %}
 				label.rectangles.forEach(rect => {
 					const rectDiv = document.createElement('div');
 					rectDiv.className = 'rectangle';
@@ -138,7 +135,7 @@
 					rectDiv.style.height = `${rect.height}px`;
 					imageContainer.appendChild(rectDiv);
 				});
-			}
+			{% endif %}
 
 			label.points.forEach(point => {
 				const pointDiv = document.createElement('div');
@@ -154,7 +151,7 @@
         let currentRectDiv = null;
 
         function onMouseDown(e) {
-            if (mode === 'author') {
+        {% if user_role == 'author' %}
                 drawing = true;
                 startX = e.offsetX;
                 startY = e.offsetY;
@@ -163,40 +160,45 @@
                 currentRectDiv.style.left = `${startX}px`;
                 currentRectDiv.style.top = `${startY}px`;
                 imageContainer.appendChild(currentRectDiv);
-            } else if (mode === 'tester') {
+            {% endif %}
+            {% if user_role == 'tester' %}
                 const point = { x: e.offsetX, y: e.offsetY };
                 imageLabels[currentImageIndex].points.push(point);
                 drawAnnotations(imageLabels[currentImageIndex]);
                 if (isPointInRectangles(point, imageLabels[currentImageIndex].rectangles)) {
                     nextImage();
                 }
-            }
+            {% endif %}
         }
 
         function onMouseMove(e) {
-            if (mode === 'author' && drawing) {
-                const currentX = e.offsetX;
-                const currentY = e.offsetY;
-                currentRectDiv.style.left = `${Math.min(startX, currentX)}px`;
-                currentRectDiv.style.top = `${Math.min(startY, currentY)}px`;
-                currentRectDiv.style.width = `${Math.abs(currentX - startX)}px`;
-                currentRectDiv.style.height = `${Math.abs(currentY - startY)}px`;
-            }
+            {% if user_role == 'author' %}
+                if (drawing) {
+                    const currentX = e.offsetX;
+                    const currentY = e.offsetY;
+                    currentRectDiv.style.left = `${Math.min(startX, currentX)}px`;
+                    currentRectDiv.style.top = `${Math.min(startY, currentY)}px`;
+                    currentRectDiv.style.width = `${Math.abs(currentX - startX)}px`;
+                    currentRectDiv.style.height = `${Math.abs(currentY - startY)}px`;
+                }
+            {% endif %}
         }
 
         function onMouseUp(e) {
-            if (mode === 'author' && drawing) {
-                drawing = false;
-                const rect = {
-                    left: Math.min(startX, e.offsetX),
-                    top: Math.min(startY, e.offsetY),
-                    width: Math.abs(e.offsetX - startX),
-                    height: Math.abs(e.offsetY - startY)
-                };
-                imageLabels[currentImageIndex].rectangles.push(rect);
-                drawAnnotations(imageLabels[currentImageIndex]);
-                currentRectDiv = null;
-            }
+            {% if user_role == 'author' %}
+                if (drawing) {
+                    drawing = false;
+                    const rect = {
+                        left: Math.min(startX, e.offsetX),
+                        top: Math.min(startY, e.offsetY),
+                        width: Math.abs(e.offsetX - startX),
+                        height: Math.abs(e.offsetY - startY)
+                    };
+                    imageLabels[currentImageIndex].rectangles.push(rect);
+                    drawAnnotations(imageLabels[currentImageIndex]);
+                    currentRectDiv = null;
+                }
+            {% endif %}
         }
 
         function isPointInRectangles(point, rectangles) {
