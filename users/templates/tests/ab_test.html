@@ -4,43 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AB test</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0;
-            padding: 0;
-        }
-        #toolbar {
-            display: flex;
-            justify-content: space-between;
-            width: 80%;
-            margin-top: 20px;
-        }
-        #imageContainer {
-            position: relative;
-            margin-top: 20px;
-        }
-        #image {
-            max-width: 80%;
-            max-height: 80vh;
-        }
-        .rectangle {
-            position: absolute;
-            border: 2px solid red;
-            pointer-events: none;
-        }
-        .point {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: green;
-            pointer-events: none;
-        }
-    </style>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'styles/styles.css' %}">
 </head>
 <body>
     <form id="toolbar">
@@ -50,11 +15,18 @@
         <button type="button" id="prevImage">Previous</button>
         <button type="button" id="nextImage">Next</button>
         <button type="button" id="saveProject">Save Project</button>
+        <a href="{% url 'my_tests' %}" class="button">My Tests</a>
     </form>
     <div id="imageContainer"></div>
     <input type="file" id="imageInput" accept="image/png" style="display: none;">
     <input type="file" id="loadTestInput" accept=".json" style="display: none;">
     <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+        {% if test_data %}
+            loadProject({{ test_data|safe }});
+        {% endif %}
+    });
+
         let imageLabels = [];
         let currentImageIndex = -1;
         let mode = "author";
@@ -68,7 +40,7 @@
         const loadTestInput = document.getElementById('loadTestInput');
 
         loadImageButton.addEventListener('click', () => imageInput.click());
-        loadTestButton.addEventListener('click', () => loadTestInput.click());
+        loadTestButton.addEventListener('click', () => loadTestFromServer(1)); // Replace 1 with the appropriate test ID
         prevImageButton.addEventListener('click', prevImage);
         nextImageButton.addEventListener('click', nextImage);
         saveProjectButton.addEventListener('click', saveProject);
@@ -125,25 +97,25 @@
         }
 
         function drawAnnotations(label) {
-			{% if user_role == 'author' %}
-				label.rectangles.forEach(rect => {
-					const rectDiv = document.createElement('div');
-					rectDiv.className = 'rectangle';
-					rectDiv.style.left = `${rect.left}px`;
-					rectDiv.style.top = `${rect.top}px`;
-					rectDiv.style.width = `${rect.width}px`;
-					rectDiv.style.height = `${rect.height}px`;
-					imageContainer.appendChild(rectDiv);
-				});
-			{% endif %}
+            {% if user_role == 'author' %}
+            label.rectangles.forEach(rect => {
+                const rectDiv = document.createElement('div');
+                rectDiv.className = 'rectangle';
+                rectDiv.style.left = `${rect.left}px`;
+                rectDiv.style.top = `${rect.top}px`;
+                rectDiv.style.width = `${rect.width}px`;
+                rectDiv.style.height = `${rect.height}px`;
+                imageContainer.appendChild(rectDiv);
+            });
+            {% endif %}
 
-			label.points.forEach(point => {
-				const pointDiv = document.createElement('div');
-				pointDiv.className = 'point';
-				pointDiv.style.left = `${point.x - 4}px`; // Center the point
-				pointDiv.style.top = `${point.y - 4}px`; // Center the point
-				imageContainer.appendChild(pointDiv);
-			});
+            label.points.forEach(point => {
+                const pointDiv = document.createElement('div');
+                pointDiv.className = 'point';
+                pointDiv.style.left = `${point.x - 4}px`; // Center the point
+                pointDiv.style.top = `${point.y - 4}px`; // Center the point
+                imageContainer.appendChild(pointDiv);
+            });
         }
 
         let drawing = false;
@@ -151,53 +123,53 @@
         let currentRectDiv = null;
 
         function onMouseDown(e) {
-        {% if user_role == 'author' %}
-                drawing = true;
-                startX = e.offsetX;
-                startY = e.offsetY;
-                currentRectDiv = document.createElement('div');
-                currentRectDiv.className = 'rectangle';
-                currentRectDiv.style.left = `${startX}px`;
-                currentRectDiv.style.top = `${startY}px`;
-                imageContainer.appendChild(currentRectDiv);
+            {% if user_role == 'author' %}
+            drawing = true;
+            startX = e.offsetX;
+            startY = e.offsetY;
+            currentRectDiv = document.createElement('div');
+            currentRectDiv.className = 'rectangle';
+            currentRectDiv.style.left = `${startX}px`;
+            currentRectDiv.style.top = `${startY}px`;
+            imageContainer.appendChild(currentRectDiv);
             {% endif %}
             {% if user_role == 'tester' %}
-                const point = { x: e.offsetX, y: e.offsetY };
-                imageLabels[currentImageIndex].points.push(point);
-                drawAnnotations(imageLabels[currentImageIndex]);
-                if (isPointInRectangles(point, imageLabels[currentImageIndex].rectangles)) {
-                    nextImage();
-                }
+            const point = { x: e.offsetX, y: e.offsetY };
+            imageLabels[currentImageIndex].points.push(point);
+            drawAnnotations(imageLabels[currentImageIndex]);
+            if (isPointInRectangles(point, imageLabels[currentImageIndex].rectangles)) {
+                nextImage();
+            }
             {% endif %}
         }
 
         function onMouseMove(e) {
             {% if user_role == 'author' %}
-                if (drawing) {
-                    const currentX = e.offsetX;
-                    const currentY = e.offsetY;
-                    currentRectDiv.style.left = `${Math.min(startX, currentX)}px`;
-                    currentRectDiv.style.top = `${Math.min(startY, currentY)}px`;
-                    currentRectDiv.style.width = `${Math.abs(currentX - startX)}px`;
-                    currentRectDiv.style.height = `${Math.abs(currentY - startY)}px`;
-                }
+            if (drawing) {
+                const currentX = e.offsetX;
+                const currentY = e.offsetY;
+                currentRectDiv.style.left = `${Math.min(startX, currentX)}px`;
+                currentRectDiv.style.top = `${Math.min(startY, currentY)}px`;
+                currentRectDiv.style.width = `${Math.abs(currentX - startX)}px`;
+                currentRectDiv.style.height = `${Math.abs(currentY - startY)}px`;
+            }
             {% endif %}
         }
 
         function onMouseUp(e) {
             {% if user_role == 'author' %}
-                if (drawing) {
-                    drawing = false;
-                    const rect = {
-                        left: Math.min(startX, e.offsetX),
-                        top: Math.min(startY, e.offsetY),
-                        width: Math.abs(e.offsetX - startX),
-                        height: Math.abs(e.offsetY - startY)
-                    };
-                    imageLabels[currentImageIndex].rectangles.push(rect);
-                    drawAnnotations(imageLabels[currentImageIndex]);
-                    currentRectDiv = null;
-                }
+            if (drawing) {
+                drawing = false;
+                const rect = {
+                    left: Math.min(startX, e.offsetX),
+                    top: Math.min(startY, e.offsetY),
+                    width: Math.abs(e.offsetX - startX),
+                    height: Math.abs(e.offsetY - startY)
+                };
+                imageLabels[currentImageIndex].rectangles.push(rect);
+                drawAnnotations(imageLabels[currentImageIndex]);
+                currentRectDiv = null;
+            }
             {% endif %}
         }
 
@@ -240,27 +212,94 @@
                     points: label.points
                 };
             });
-            const blob = new Blob([JSON.stringify(data, null, 4)], { type: 'application/json' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'project.json';
-            link.click();
+
+            fetch('{% url 'save_test' %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                if (data.status === 'success') {
+                    alert('Test saved successfully!');
+                } else {
+                    alert('Failed to save test.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while saving the test.');
+            });
         }
 
-        function loadProject(data) {
-            imageLabels = data.map(item => {
-                const img = new Image();
-                img.src = 'data:image/png;base64,' + item.image;
-                return {
-                    img,
-                    rectangles: item.rectangles,
-                    points: item.points
-                };
+                document.addEventListener('DOMContentLoaded', () => {
+            const testLinks = document.querySelectorAll('.test-link');
+            testLinks.forEach(link => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const testId = event.target.getAttribute('data-test-id');
+                    fetch(`/load_test/${testId}/`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Assuming you have a function to load the project data
+                            loadProject(data.data);
+                        } else {
+                            alert('Failed to load test.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while loading the test.');
+                    });
+                });
             });
-            currentImageIndex = 0;
-            imageLabels[currentImageIndex].img.style.display = 'none';
-            renderCurrentImage();
+        });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
         }
+
+function loadProject(data) {
+    console.log('Loading project with data:', data);
+    imageLabels = data.map(item => {
+        const img = new Image();
+        img.src = 'data:image/png;base64,' + item.image;
+        return {
+            img,
+            rectangles: item.rectangles,
+            points: item.points
+        };
+    });
+    console.log('Image labels:', imageLabels);
+    if (imageLabels.length > 0) {
+        currentImageIndex = 0;
+        renderCurrentImage();
+    } else {
+        console.error('No images to load');
+    }
+}
     </script>
 </body>
 </html>
