@@ -14,6 +14,7 @@ def home(request):
     return render(request, "users/home.html")
 
 
+@login_required
 def ab_test(request):
     user_role = request.user.role
     test_id = request.GET.get('test_id')

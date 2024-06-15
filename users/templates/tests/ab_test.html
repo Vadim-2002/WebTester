@@ -40,7 +40,8 @@
         loadProject(testData);
         {% endif %}
 
-        function loadProject(data) {
+        function loadProject(data)
+        {
             imageLabels = data.map(item => {
                 const img = new Image();
                 img.src = 'data:image/png;base64,' + item.image;
@@ -55,7 +56,8 @@
 
         imageInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
-            if (file) {
+            if (file)
+            {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
@@ -68,7 +70,8 @@
             }
         });
 
-        function addImageLabel(img) {
+        function addImageLabel(img)
+        {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = img.width;
@@ -77,14 +80,16 @@
             const imageBase64 = canvas.toDataURL('image/png').split(',')[1];
 
             imageLabels.push({ img, imageBase64, rectangles: [], points: [] });
-            if (currentImageIndex !== -1) {
+            if (currentImageIndex !== -1)
+            {
                 imageLabels[currentImageIndex].img.style.display = 'none';
             }
             currentImageIndex = imageLabels.length - 1;
             renderCurrentImage();
         }
 
-        function renderCurrentImage() {
+        function renderCurrentImage()
+        {
             if (currentImageIndex === -1) return;
             imageContainer.innerHTML = '';
             const currentLabel = imageLabels[currentImageIndex];
@@ -97,7 +102,8 @@
             drawAnnotations(currentLabel);
         }
 
-        function drawAnnotations(label) {
+        function drawAnnotations(label)
+        {
             label.rectangles.forEach(rect => {
                 const rectDiv = document.createElement('div');
                 rectDiv.className = 'rectangle';
@@ -107,6 +113,7 @@
                 rectDiv.style.height = `${rect.height}px`;
                 imageContainer.appendChild(rectDiv);
             });
+
             label.points.forEach(point => {
                 const pointDiv = document.createElement('div');
                 pointDiv.className = 'point';
@@ -120,60 +127,85 @@
         let startX, startY;
         let currentRectDiv = null;
 
-        function onMouseDown(e) {
-            drawing = true;
-            startX = e.offsetX;
-            startY = e.offsetY;
-            currentRectDiv = document.createElement('div');
-            currentRectDiv.className = 'rectangle';
-            currentRectDiv.style.left = `${startX}px`;
-            currentRectDiv.style.top = `${startY}px`;
-            imageContainer.appendChild(currentRectDiv);
-        }
+        function onMouseDown(e)
+        {
+            {% if user_role == 'author' %}
+                drawing = true;
+                startX = e.offsetX;
+                startY = e.offsetY;
+                currentRectDiv = document.createElement('div');
+                currentRectDiv.className = 'rectangle';
+                currentRectDiv.style.left = `${startX}px`;
+                currentRectDiv.style.top = `${startY}px`;
+                imageContainer.appendChild(currentRectDiv);
+            {% endif %}
 
-        function onMouseMove(e) {
-            if (drawing) {
-                const currentX = e.offsetX;
-                const currentY = e.offsetY;
-                currentRectDiv.style.left = `${Math.min(startX, currentX)}px`;
-                currentRectDiv.style.top = `${Math.min(startY, currentY)}px`;
-                currentRectDiv.style.width = `${Math.abs(currentX - startX)}px`;
-                currentRectDiv.style.height = `${Math.abs(currentY - startY)}px`;
-            }
-        }
-
-        function onMouseUp(e) {
-            if (drawing) {
-                drawing = false;
-                const rect = {
-                    left: Math.min(startX, e.offsetX),
-                    top: Math.min(startY, e.offsetY),
-                    width: Math.abs(e.offsetX - startX),
-                    height: Math.abs(e.offsetY - startY)
-                };
-                imageLabels[currentImageIndex].rectangles.push(rect);
+            {% if user_role == 'tester' %}
+                const point = { x: e.offsetX, y: e.offsetY };
+                imageLabels[currentImageIndex].points.push(point);
                 drawAnnotations(imageLabels[currentImageIndex]);
-                currentRectDiv = null;
-            }
+                if (isPointInRectangles(point, imageLabels[currentImageIndex].rectangles)) {
+                    nextImage();
+                }
+            {% endif %}
         }
 
-        function prevImage() {
-            if (currentImageIndex > 0) {
+        function onMouseMove(e)
+        {
+         {% if user_role == 'author' %}
+             if (drawing)
+             {
+                 const currentX = e.offsetX;
+                 const currentY = e.offsetY;
+                 currentRectDiv.style.left = `${Math.min(startX, currentX)}px`;
+                 currentRectDiv.style.top = `${Math.min(startY, currentY)}px`;
+                 currentRectDiv.style.width = `${Math.abs(currentX - startX)}px`;
+                 currentRectDiv.style.height = `${Math.abs(currentY - startY)}px`;
+             }
+         {% endif %}
+        }
+
+        function onMouseUp(e)
+        {
+            {% if user_role == 'author' %}
+                if (drawing)
+                {
+                    drawing = false;
+                    const rect = {
+                        left: Math.min(startX, e.offsetX),
+                        top: Math.min(startY, e.offsetY),
+                        width: Math.abs(e.offsetX - startX),
+                        height: Math.abs(e.offsetY - startY)
+                    };
+                    imageLabels[currentImageIndex].rectangles.push(rect);
+                    drawAnnotations(imageLabels[currentImageIndex]);
+                    currentRectDiv = null;
+                }
+            {% endif %}
+        }
+
+        function prevImage()
+        {
+            if (currentImageIndex > 0)
+            {
                 imageLabels[currentImageIndex].img.style.display = 'none';
                 currentImageIndex--;
                 renderCurrentImage();
             }
         }
 
-        function nextImage() {
-            if (currentImageIndex < imageLabels.length - 1) {
+        function nextImage()
+        {
+            if (currentImageIndex < imageLabels.length - 1)
+            {
                 imageLabels[currentImageIndex].img.style.display = 'none';
                 currentImageIndex++;
                 renderCurrentImage();
             }
         }
 
-        function saveProject() {
+        function saveProject()
+        {
             const data = imageLabels.map(label => {
                 return {
                     image: label.imageBase64,
@@ -181,6 +213,7 @@
                     points: label.points
                 };
             });
+
             fetch("{% url 'save_test' %}", {
                 method: "POST",
                 headers: {
