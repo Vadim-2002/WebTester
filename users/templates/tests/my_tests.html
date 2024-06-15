@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tests</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'styles/styles.css' %}">
+</head>
+<body>
+    <h1>My Tests</h1>
+    <a href="{% url 'home' %}">Back to Home</a>
+    <ul>
+        {% for test in tests %}
+            <li>
+                <a href="{% url 'ab_test' %}?test_id={{ test.id }}">{{ test.created_at }}</a>
+            </li>
+        {% empty %}
+            <li>No tests found.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

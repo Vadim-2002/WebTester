@@ -1,5 +1,3 @@
-import base64
-
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.edit import CreateView
@@ -25,7 +23,7 @@ def ab_test(request):
         test_data = []
         for test_image in test_images:
             test_data.append({
-                'image': test_image.image,
+                'image': test_image.image,  # Base64 string
                 'rectangles': test_image.rectangles,
                 'points': test_image.points
             })
@@ -54,21 +52,6 @@ def save_test(request):
 def my_tests(request):
     tests = Test.objects.filter(user=request.user)
     return render(request, "tests/my_tests.html", {"tests": tests})
-
-
-@csrf_exempt
-@login_required
-def load_test(request, test_id):
-    if request.method == "GET":
-        test = get_object_or_404(Test, id=test_id, user=request.user)
-        test_images = TestImage.objects.filter(test=test)
-        data = [{
-            'image': img.image,
-            'rectangles': img.rectangles,
-            'points': img.points
-        } for img in test_images]
-        return JsonResponse({'status': 'success', 'data': data})
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
 
 
 class SignUp(CreateView):

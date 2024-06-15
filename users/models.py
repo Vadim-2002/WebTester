@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.db import models
 from django.contrib.auth import get_user_model
 
 
@@ -24,8 +23,8 @@ class Test(models.Model):
 
 
 class TestImage(models.Model):
-    test = models.ForeignKey('Test', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='test_images/')
+    test = models.ForeignKey(Test, on_delete=models.CASCADE)
+    image = models.TextField()  # Base64 encoded image
     rectangles = models.JSONField()
     points = models.JSONField()
 
