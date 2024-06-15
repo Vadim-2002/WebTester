@@ -1,13 +1,22 @@
-<!--/templates/register.html-->
-
-{% block content %}
-<h2>Register</h2>
-
-<form method="post">
-    {% csrf_token %}
-    {{form}}
-    <input type="submit" value="Register">
-</form>
-
-<a href="{% url 'login' %}">Авторизация</a>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'signup.css' %}">
+</head>
+<body>
+    <div class="container">
+        {% block content %}
+        <h2>Регистрация</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <input type="submit" value="Зарегистрироваться">
+        </form>
+        <a href="{% url 'login' %}">Авторизация</a>
+        {% endblock %}
+    </div>
+</body>
+</html>
