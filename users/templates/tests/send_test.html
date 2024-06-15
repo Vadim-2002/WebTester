@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отправить тест</title>
+</head>
+<body>
+    <form id="sendTestForm" method="POST" action="{% url 'submit_test' %}">
+        {% csrf_token %}
+        <h1>Выберите тестировщиков</h1>
+        <input type="hidden" name="test_id" value="{{ request.GET.test_id }}">
+        <ul>
+            {% for tester in testers %}
+            <li>
+                <label>
+                    <input type="checkbox" name="testers" value="{{ tester.id }}">
+                    {{ tester.username }}
+                </label>
+            </li>
+            {% endfor %}
+        </ul>
+        <button type="submit">Отправить</button>
+    </form>
+</body>
+</html>

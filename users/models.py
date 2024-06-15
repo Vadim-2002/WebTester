@@ -16,6 +16,7 @@ User = get_user_model()
 
 class Test(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    testers = models.ManyToManyField(User, related_name='assigned_tests')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -15,6 +15,7 @@
         <button type="button" id="nextImage">---></button>
         <button type="button" id="saveProject">Сохранить</button>
         <a href="{% url 'my_tests' %}">Мои тесты</a>
+        <a href="{% url 'send_test' %}?test_id={{ test_id }}">Отправить</a>
     </form>
     <div id="imageContainer"></div>
     <input type="file" id="imageInput" accept="image/png" style="display: none;">
