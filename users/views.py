@@ -11,7 +11,9 @@ from .forms import CustomUserCreationForm
 
 
 def home(request):
-    return render(request, "users/home.html")
+    user_name = request.user.username
+
+    return render(request, "users/home.html", {'user_name': user_name})
 
 
 @login_required
