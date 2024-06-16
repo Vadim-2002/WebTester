@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AB test</title>
     {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'ab_test.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/tests/ab_test.css' %}">
 </head>
 <body>
     <form id="toolbar">
@@ -92,36 +92,43 @@
         function renderCurrentImage()
         {
             if (currentImageIndex === -1) return;
+
             imageContainer.innerHTML = '';
             const currentLabel = imageLabels[currentImageIndex];
             imageContainer.appendChild(currentLabel.img);
+
             currentLabel.img.style.display = 'block';
             currentLabel.img.addEventListener('mousedown', onMouseDown);
             currentLabel.img.addEventListener('mouseup', onMouseUp);
             currentLabel.img.addEventListener('mousemove', onMouseMove);
             currentLabel.img.addEventListener('dragstart', (e) => e.preventDefault());
+
             drawAnnotations(currentLabel);
         }
 
         function drawAnnotations(label)
         {
-            label.rectangles.forEach(rect => {
-                const rectDiv = document.createElement('div');
-                rectDiv.className = 'rectangle';
-                rectDiv.style.left = `${rect.left}px`;
-                rectDiv.style.top = `${rect.top}px`;
-                rectDiv.style.width = `${rect.width}px`;
-                rectDiv.style.height = `${rect.height}px`;
-                imageContainer.appendChild(rectDiv);
-            });
+            {% if user_role == 'author' %}
+                label.rectangles.forEach(rect => {
+                    const rectDiv = document.createElement('div');
+                    rectDiv.className = 'rectangle';
+                    rectDiv.style.left = `${rect.left}px`;
+                    rectDiv.style.top = `${rect.top}px`;
+                    rectDiv.style.width = `${rect.width}px`;
+                    rectDiv.style.height = `${rect.height}px`;
+                    imageContainer.appendChild(rectDiv);
+                });
+            {% endif %}
 
-            label.points.forEach(point => {
-                const pointDiv = document.createElement('div');
-                pointDiv.className = 'point';
-                pointDiv.style.left = `${point.x - 4}px`;
-                pointDiv.style.top = `${point.y - 4}px`;
-                imageContainer.appendChild(pointDiv);
-            });
+            {% if user_role == 'tester' %}
+                label.points.forEach(point => {
+                    const pointDiv = document.createElement('div');
+                    pointDiv.className = 'point';
+                    pointDiv.style.left = `${point.x - 4}px`;
+                    pointDiv.style.top = `${point.y - 4}px`;
+                    imageContainer.appendChild(pointDiv);
+                });
+            {% endif %}
         }
 
         let drawing = false;
@@ -151,19 +158,29 @@
             {% endif %}
         }
 
+        function isPointInRectangles(point, rectangles)
+        {
+            return rectangles.some(rect => {
+                return point.x >= rect.left &&
+                       point.x <= rect.left + rect.width &&
+                       point.y >= rect.top &&
+                       point.y <= rect.top + rect.height;
+            });
+        }
+
         function onMouseMove(e)
         {
-         {% if user_role == 'author' %}
-             if (drawing)
-             {
-                 const currentX = e.offsetX;
-                 const currentY = e.offsetY;
-                 currentRectDiv.style.left = `${Math.min(startX, currentX)}px`;
-                 currentRectDiv.style.top = `${Math.min(startY, currentY)}px`;
-                 currentRectDiv.style.width = `${Math.abs(currentX - startX)}px`;
-                 currentRectDiv.style.height = `${Math.abs(currentY - startY)}px`;
-             }
-         {% endif %}
+            {% if user_role == 'author' %}
+                if (drawing)
+                {
+                    const currentX = e.offsetX;
+                    const currentY = e.offsetY;
+                    currentRectDiv.style.left = `${Math.min(startX, currentX)}px`;
+                    currentRectDiv.style.top = `${Math.min(startY, currentY)}px`;
+                    currentRectDiv.style.width = `${Math.abs(currentX - startX)}px`;
+                    currentRectDiv.style.height = `${Math.abs(currentY - startY)}px`;
+                }
+            {% endif %}
         }
 
         function onMouseUp(e)

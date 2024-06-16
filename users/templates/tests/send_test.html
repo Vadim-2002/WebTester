@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Отправить тест</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/tests/send_test.css' %}">
 </head>
 <body>
     <form id="sendTestForm" method="POST" action="{% url 'submit_test' %}">
