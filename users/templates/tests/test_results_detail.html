@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты теста</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/tests/test_results_detail.css' %}">
+</head>
+<body>
+    <h1>Результаты теста: {{ test.name }}</h1>
+    <a href="{% url 'my_tests' %}">Вернуться к моим тестам</a>
+    <ul>
+        {% for result in test_results %}
+            <li>
+                Тестировщик: {{ result.tester.username }} <br>
+                Время начала: {{ result.start }} <br>
+                Время окончания: {{ result.end }} <br>
+            </li>
+        {% empty %}
+                Тестировщик: Кто-то <br>
+                Время начала: 00:00 <br>
+                Время окончания: 00:05 <br>
+        {% endfor %}
+    </ul>
+</body>
+</html>

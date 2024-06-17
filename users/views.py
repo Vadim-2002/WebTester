@@ -4,7 +4,7 @@ from django.views.generic.edit import CreateView
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from .models import Test, TestImage, User, CustomUser
+from .models import Test, TestImage, User, CustomUser, TestResult
 import json
 
 from .forms import CustomUserCreationForm
@@ -42,8 +42,11 @@ def save_test(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            test = Test.objects.create(user=request.user)
-            for item in data:
+            test_name = data.get('name', 'Unnamed Test')
+            test_data = data.get('data', [])
+
+            test = Test.objects.create(user=request.user, name=test_name)
+            for item in test_data:
                 image = item['image']
                 rectangles = item['rectangles']
                 points = item['points']
@@ -81,12 +84,23 @@ def submit_test(request):
             testers = User.objects.filter(id__in=selected_testers, role='tester')
             test.testers.set(testers)
             test.save()
-            return JsonResponse({'status': 'success'})
+            return redirect('ab_test')
         except Test.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Test not found or you do not have permission'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+
+@login_required
+def test_results_detail(request):
+    test = get_object_or_404(Test, id=request.GET.get('test_id'))
+    test_results = TestResult.objects.filter(test=test)
+    context = {
+        'test': test,
+        'test_results': test_results
+    }
+    return render(request, 'tests/test_results_detail.html', context)
 
 
 class SignUp(CreateView):

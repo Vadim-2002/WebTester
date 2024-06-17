@@ -18,9 +18,10 @@ class Test(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     testers = models.ManyToManyField(User, related_name='assigned_tests')
     created_at = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=255, default='Unnamed Test')
 
     def __str__(self):
-        return f"Test by {self.user.username} at {self.created_at}"
+        return f"{self.name} by {self.user.username} at {self.created_at}"
 
 
 class TestImage(models.Model):
@@ -31,3 +32,14 @@ class TestImage(models.Model):
 
     def __str__(self):
         return f"Test Image for {self.test} ({self.image})"
+
+
+class TestResult(models.Model):
+    test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name='test_results')
+    tester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='test_results')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='authored_test_results')
+    start = models.DateTimeField()
+    end = models.DateTimeField()
+
+    def __str__(self):
+        return f"TestResult for {self.test} by {self.tester.username} from {self.start} to {self.end}"

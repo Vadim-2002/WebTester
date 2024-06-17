@@ -6,20 +6,69 @@
     <title>AB test</title>
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'styles/tests/ab_test.css' %}">
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <form id="toolbar">
         <a href="{% url 'home' %}">Назад</a>
-        <button type="button" id="loadImage">Загрузить</button>
+        {% if user_role == 'author' %}
+            <button type="button" id="loadImage">Загрузить</button>
+        {% endif %}
         <button type="button" id="prevImage"><---</button>
         <button type="button" id="nextImage">---></button>
         <button type="button" id="saveProject">Сохранить</button>
         <a href="{% url 'my_tests' %}">Мои тесты</a>
+        {% if user_role == 'author' %}
         <a href="{% url 'send_test' %}?test_id={{ test_id }}">Отправить</a>
+        {% endif %}
     </form>
     <div id="imageContainer"></div>
     <input type="file" id="imageInput" accept="image/png" style="display: none;">
     <input type="file" id="loadTestInput" accept=".json" style="display: none;">
+
+    <!-- Модальное окно для ввода названия теста -->
+    <div id="testNameModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Введите название теста</h2>
+            <input type="text" id="testNameInput" placeholder="Название теста">
+            <button id="saveTestNameButton">Сохранить</button>
+        </div>
+    </div>
+
     <script>
         let imageLabels = [];
         let currentImageIndex = -1;
@@ -30,67 +79,86 @@
         const saveProjectButton = document.getElementById('saveProject');
         const imageInput = document.getElementById('imageInput');
 
-        loadImageButton.addEventListener('click', () => imageInput.click());
+        {% if user_role == 'author' %}
+            loadImageButton.addEventListener('click', () => imageInput.click());
+        {% endif %}
         prevImageButton.addEventListener('click', prevImage);
         nextImageButton.addEventListener('click', nextImage);
-        saveProjectButton.addEventListener('click', saveProject);
 
-        // Check if test data is available from the server
+        // Модальное окно
+        const modal = document.getElementById('testNameModal');
+        const testNameInput = document.getElementById('testNameInput');
+        const saveTestNameButton = document.getElementById('saveTestNameButton');
+        const closeModalButton = document.getElementsByClassName('close')[0];
+
+        saveProjectButton.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+
+        closeModalButton.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        saveTestNameButton.addEventListener('click', () => {
+            const testName = testNameInput.value.trim();
+            if (testName) {
+                saveProject(testName);
+                modal.style.display = 'none';
+            } else {
+                alert('Введите название теста');
+            }
+        });
+
+        // Проверка наличия данных теста с сервера
         {% if test_data %}
         const testData = JSON.parse('{{ test_data|escapejs }}');
         loadProject(testData);
         {% endif %}
 
-        function loadProject(data)
-        {
-            imageLabels = data.map(item => {
-                const img = new Image();
-                img.src = 'data:image/png;base64,' + item.image;
-                img.onload = () => {
-                    renderCurrentImage();
-                };
-                return { img, rectangles: item.rectangles, points: item.points };
-            });
-            currentImageIndex = 0;
+        function loadProject(data) {
+    imageLabels = data.map(item => {
+        const img = new Image();
+        img.src = 'data:image/png;base64,' + item.image;
+        img.onload = () => {
             renderCurrentImage();
-        }
+        };
+        return { img, rectangles: item.rectangles, points: item.points };
+    });
+    currentImageIndex = 0;
+    renderCurrentImage();
+}
 
         imageInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
-            if (file)
-            {
+            if (file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.src = e.target.result;
                     img.onload = () => {
-                        addImageLabel(img);
+                        addImageLabel(img, e.target.result);
                     };
                 };
                 reader.readAsDataURL(file);
             }
         });
 
-        function addImageLabel(img)
-        {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-            const imageBase64 = canvas.toDataURL('image/png').split(',')[1];
-
-            imageLabels.push({ img, imageBase64, rectangles: [], points: [] });
-            if (currentImageIndex !== -1)
-            {
+        function addImageLabel(img, imageData) {
+            imageLabels.push({ img, imageBase64: imageData.split(',')[1], rectangles: [], points: [] });
+            if (currentImageIndex !== -1) {
                 imageLabels[currentImageIndex].img.style.display = 'none';
             }
             currentImageIndex = imageLabels.length - 1;
             renderCurrentImage();
         }
 
-        function renderCurrentImage()
-        {
+        function renderCurrentImage() {
             if (currentImageIndex === -1) return;
 
             imageContainer.innerHTML = '';
@@ -106,8 +174,7 @@
             drawAnnotations(currentLabel);
         }
 
-        function drawAnnotations(label)
-        {
+        function drawAnnotations(label) {
             {% if user_role == 'author' %}
                 label.rectangles.forEach(rect => {
                     const rectDiv = document.createElement('div');
@@ -135,8 +202,7 @@
         let startX, startY;
         let currentRectDiv = null;
 
-        function onMouseDown(e)
-        {
+        function onMouseDown(e) {
             {% if user_role == 'author' %}
                 drawing = true;
                 startX = e.offsetX;
@@ -158,8 +224,7 @@
             {% endif %}
         }
 
-        function isPointInRectangles(point, rectangles)
-        {
+        function isPointInRectangles(point, rectangles) {
             return rectangles.some(rect => {
                 return point.x >= rect.left &&
                        point.x <= rect.left + rect.width &&
@@ -168,11 +233,9 @@
             });
         }
 
-        function onMouseMove(e)
-        {
+        function onMouseMove(e) {
             {% if user_role == 'author' %}
-                if (drawing)
-                {
+                if (drawing) {
                     const currentX = e.offsetX;
                     const currentY = e.offsetY;
                     currentRectDiv.style.left = `${Math.min(startX, currentX)}px`;
@@ -183,47 +246,37 @@
             {% endif %}
         }
 
-        function onMouseUp(e)
-        {
+        function onMouseUp(e) {
             {% if user_role == 'author' %}
-                if (drawing)
-                {
+                if (drawing) {
                     drawing = false;
                     const rect = {
-                        left: Math.min(startX, e.offsetX),
-                        top: Math.min(startY, e.offsetY),
-                        width: Math.abs(e.offsetX - startX),
-                        height: Math.abs(e.offsetY - startY)
+                        left: parseInt(currentRectDiv.style.left),
+                        top: parseInt(currentRectDiv.style.top),
+                        width: parseInt(currentRectDiv.style.width),
+                        height: parseInt(currentRectDiv.style.height)
                     };
                     imageLabels[currentImageIndex].rectangles.push(rect);
-                    drawAnnotations(imageLabels[currentImageIndex]);
                     currentRectDiv = null;
                 }
             {% endif %}
         }
 
-        function prevImage()
-        {
-            if (currentImageIndex > 0)
-            {
-                imageLabels[currentImageIndex].img.style.display = 'none';
+        function prevImage() {
+            if (currentImageIndex > 0) {
                 currentImageIndex--;
                 renderCurrentImage();
             }
         }
 
-        function nextImage()
-        {
-            if (currentImageIndex < imageLabels.length - 1)
-            {
-                imageLabels[currentImageIndex].img.style.display = 'none';
+        function nextImage() {
+            if (currentImageIndex < imageLabels.length - 1) {
                 currentImageIndex++;
                 renderCurrentImage();
             }
         }
 
-        function saveProject()
-        {
+        function saveProject(testName) {
             const data = imageLabels.map(label => {
                 return {
                     image: label.imageBase64,
@@ -238,7 +291,7 @@
                     "Content-Type": "application/json",
                     "X-CSRFToken": "{{ csrf_token }}"
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify({ name: testName, data })
             })
             .then(response => response.json())
             .then(result => {
