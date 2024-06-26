@@ -11,4 +11,5 @@ urlpatterns = [
      path('send_test/', views.send_test, name='send_test'),
      path('submit_test/', views.submit_test, name='submit_test'),
      path('test_results_detail/', views.test_results_detail, name='test_results_detail'),
+     path('save_test_results/', views.save_test_results, name='save_test_results'),
 ]

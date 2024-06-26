@@ -1,4 +1,5 @@
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.edit import CreateView
 from django.shortcuts import render, redirect, get_object_or_404
@@ -101,6 +102,36 @@ def test_results_detail(request):
         'test_results': test_results
     }
     return render(request, 'tests/test_results_detail.html', context)
+
+
+@csrf_exempt
+def save_test_results(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            start_time = data.get('start_time')
+            end_time = data.get('end_time')
+            test_id = data.get('test_id')
+
+            # Преобразование строк в объекты datetime
+            start_time = timezone.datetime.fromisoformat(start_time)
+            end_time = timezone.datetime.fromisoformat(end_time)
+
+            test = get_object_or_404(Test, id=test_id)
+
+            # Создание объекта результата теста и сохранение его в базу данных
+            test_result = TestResult(
+                test=test,
+                start=start_time,
+                end=end_time,
+                tester=request.user
+            )
+            test_result.save()
+
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
 
 
 class SignUp(CreateView):

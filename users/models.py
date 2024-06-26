@@ -37,7 +37,6 @@ class TestImage(models.Model):
 class TestResult(models.Model):
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name='test_results')
     tester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='test_results')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='authored_test_results')
     start = models.DateTimeField()
     end = models.DateTimeField()
 
