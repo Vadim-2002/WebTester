@@ -22,9 +22,8 @@
         {% endif %}
     </form>
     <div id="imageContainer"></div>
-    <input type="file" id="imageInput" accept="image/png" style="display: none;">
+    <input type="file" id="imageInput" accept="image/png" multiple style="display: none;">
     <input type="file" id="loadTestInput" accept=".json" style="display: none;">
-
 
     <!-- Модальное окно для ввода названия теста -->
     <div id="testNameModal" class="modal">
@@ -91,30 +90,32 @@
         {% endif %}
 
         function loadProject(data) {
-    imageLabels = data.map(item => {
-        const img = new Image();
-        img.src = 'data:image/png;base64,' + item.image;
-        img.onload = () => {
+            imageLabels = data.map(item => {
+                const img = new Image();
+                img.src = 'data:image/png;base64,' + item.image;
+                img.onload = () => {
+                    renderCurrentImage();
+                };
+                return { img, rectangles: item.rectangles, points: item.points };
+            });
+            currentImageIndex = 0;
             renderCurrentImage();
-        };
-        return { img, rectangles: item.rectangles, points: item.points };
-    });
-    currentImageIndex = 0;
-    renderCurrentImage();
-}
+        }
 
         imageInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.src = e.target.result;
-                    img.onload = () => {
-                        addImageLabel(img, e.target.result);
+            const files = e.target.files;
+            if (files.length > 0) {
+                for (const file of files) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.src = e.target.result;
+                        img.onload = () => {
+                            addImageLabel(img, e.target.result);
+                        };
                     };
-                };
-                reader.readAsDataURL(file);
+                    reader.readAsDataURL(file);
+                }
             }
         });
 
@@ -130,8 +131,7 @@
         function renderCurrentImage() {
             if (currentImageIndex === -1) return;
 
-            if (currentImageIndex === 0)
-            {
+            if (currentImageIndex === 0) {
                 startTime = new Date();
             }
 
@@ -195,8 +195,7 @@
                 if (isPointInRectangles(point, imageLabels[currentImageIndex].rectangles)) {
                     nextImage();
                 }
-                if (currentImageIndex >= imageLabels.length - 1)
-                {
+                if (currentImageIndex >= imageLabels.length - 1) {
                     endTest();
                 }
             {% endif %}
@@ -254,8 +253,7 @@
             }
         }
 
-         function endTest()
-         {
+         function endTest() {
             endTime = new Date();
 
             const testResult = {
@@ -271,8 +269,7 @@
                     "X-CSRFToken": "{{ csrf_token }}"
                 },
                 body: JSON.stringify(testResult)
-            })
-
+            });
             //alert('Тест пройден!');
         }
 
