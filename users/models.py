@@ -39,6 +39,15 @@ class TestResult(models.Model):
     tester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='test_results')
     start = models.DateTimeField()
     end = models.DateTimeField()
+    duration = models.CharField(max_length=12, blank=True, null=True)  # MM:SS:ms
 
     def __str__(self):
         return f"TestResult for {self.test} by {self.tester.username} from {self.start} to {self.end}"
+
+    def save(self, *args, **kwargs):
+        if self.start and self.end:
+            duration_td = self.end - self.start
+            minutes, seconds = divmod(duration_td.total_seconds(), 60)
+            milliseconds = duration_td.microseconds // 1000
+            self.duration = f"{int(minutes):02}:{int(seconds):02}:{milliseconds:03}"
+        super().save(*args, **kwargs)
