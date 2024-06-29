@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -96,7 +97,10 @@ def submit_test(request):
 @login_required
 def test_results_detail(request):
     test = get_object_or_404(Test, id=request.GET.get('test_id'))
-    test_results = TestResult.objects.filter(test=test)
+    if test.user.id == request.user.id:
+        test_results = TestResult.objects.filter(test=test)
+    else:
+        test_results = TestResult.objects.filter(test=test, tester=request.user.id)
     context = {
         'test': test,
         'test_results': test_results
