@@ -138,6 +138,21 @@ def save_test_results(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
 
 
+@login_required
+def delete_test(request):
+    test_id = request.GET.get('test_id')
+    test = get_object_or_404(Test, id=test_id)
+
+    if request.method == 'GET':
+        if request.user == test.user:
+            test.delete()
+            return redirect('my_tests')
+        else:
+            return redirect('my_tests')
+
+    return redirect('my_tests')
+
+
 class SignUp(CreateView):
     model = CustomUser
     form_class = CustomUserCreationForm

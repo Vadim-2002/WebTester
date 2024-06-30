@@ -12,4 +12,5 @@ urlpatterns = [
      path('submit_test/', views.submit_test, name='submit_test'),
      path('test_results_detail/', views.test_results_detail, name='test_results_detail'),
      path('save_test_results/', views.save_test_results, name='save_test_results'),
+     path('delete_test/', views.delete_test, name='delete_test'),
 ]

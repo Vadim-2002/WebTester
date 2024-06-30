@@ -6,6 +6,25 @@
     <title>My Tests</title>
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'styles/tests/my_tests.css' %}">
+    <script>
+        function confirmDelete(testId) {
+            const modal = document.getElementById('deleteModal');
+            const deleteButton = document.getElementById('confirmDeleteButton');
+            deleteButton.setAttribute('data-test-id', testId);
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('deleteModal');
+            modal.style.display = 'none';
+        }
+
+        function deleteTest() {
+            const deleteButton = document.getElementById('confirmDeleteButton');
+            const testId = deleteButton.getAttribute('data-test-id');
+            window.location.href = `{% url 'delete_test' %}?test_id=${testId}`;
+        }
+    </script>
 </head>
 <body>
     <h1>Мои тесты</h1>
@@ -15,10 +34,23 @@
             <li>
                 <a href="{% url 'ab_test' %}?test_id={{ test.id }}">{{ test.name }}</a>
                 <a href="{% url 'test_results_detail' %}?test_id={{ test.id }}">Результаты</a>
+                {% if user_role == 'author' %}
+                    <a onclick="confirmDelete({{ test.id }})">🗑️</a>
+                {% endif %}
             </li>
         {% empty %}
             <li>Тесты не найдены.</li>
         {% endfor %}
     </ul>
+
+    <!-- Модальное окно для подтверждения удаления -->
+    <div id="deleteModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Вы уверены, что хотите удалить этот тест?</h2>
+            <button id="confirmDeleteButton" onclick="deleteTest()">Удалить</button>
+            <button onclick="closeModal()">Отмена</button>
+        </div>
+    </div>
 </body>
 </html>
