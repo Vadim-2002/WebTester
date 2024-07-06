@@ -34,9 +34,7 @@
             <li>
                 <a href="{% url 'ab_test' %}?test_id={{ test.id }}">{{ test.name }}</a>
                 <a href="{% url 'test_results_detail' %}?test_id={{ test.id }}">Результаты</a>
-                {% if user_role == 'author' %}
-                    <a onclick="confirmDelete({{ test.id }})">🗑️</a>
-                {% endif %}
+                <a onclick="confirmDelete({{ test.id }})">🗑️</a>
             </li>
         {% empty %}
             <li>Тесты не найдены.</li>
