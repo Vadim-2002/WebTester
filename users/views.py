@@ -61,11 +61,12 @@ def save_test(request):
 
 @login_required
 def my_tests(request):
-    if request.user.role == 'tester':
+    user_role = request.user.role
+    if user_role == 'tester':
         tests = request.user.assigned_tests.all()
     else:
         tests = Test.objects.filter(user=request.user)
-    return render(request, "tests/my_tests.html", {"tests": tests})
+    return render(request, "tests/my_tests.html", {"tests": tests, 'user_role': user_role})
 
 
 @login_required
