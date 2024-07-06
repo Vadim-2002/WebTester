@@ -133,6 +133,7 @@
 
             if (currentImageIndex === 0) {
                 startTime = new Date();
+                endTime = null;
             }
 
             imageContainer.innerHTML = '';
@@ -162,13 +163,16 @@
             {% endif %}
 
             {% if user_role == 'tester' %}
-                label.points.forEach(point => {
-                    const pointDiv = document.createElement('div');
-                    pointDiv.className = 'point';
-                    pointDiv.style.left = `${point.x - 4}px`;
-                    pointDiv.style.top = `${point.y - 4}px`;
-                    imageContainer.appendChild(pointDiv);
-                });
+                if (!endTime)
+                {
+                    label.points.forEach(point => {
+                        const pointDiv = document.createElement('div');
+                        pointDiv.className = 'point';
+                        pointDiv.style.left = `${point.x - 4}px`;
+                        pointDiv.style.top = `${point.y - 4}px`;
+                        imageContainer.appendChild(pointDiv);
+                    });
+                }
             {% endif %}
         }
 
@@ -195,7 +199,7 @@
                 if (isPointInRectangles(point, imageLabels[currentImageIndex].rectangles)) {
                     nextImage();
                 }
-                if (currentImageIndex >= imageLabels.length - 1) {
+                if ((currentImageIndex >= imageLabels.length - 1) && (!endTime)) {
                     endTest();
                 }
             {% endif %}
@@ -270,7 +274,7 @@
                 },
                 body: JSON.stringify(testResult)
             });
-            //alert('Тест пройден!');
+            alert('Тест пройден!');
         }
 
         function saveProject(testName) {
