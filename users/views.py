@@ -1,4 +1,6 @@
-from django.db.models import Q
+import statistics
+
+from django.db.models import Q, Avg, ExpressionWrapper, DurationField, F
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -95,6 +97,43 @@ def submit_test(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
 
 
+import datetime
+
+
+def parse_time_string(time_string):
+    minutes, seconds, milliseconds = map(int, time_string.split(':'))
+    return datetime.timedelta(minutes=minutes, seconds=seconds, milliseconds=milliseconds)
+
+
+def format_time_string(time_delta):
+    total_seconds = time_delta.total_seconds()
+    minutes, seconds = divmod(total_seconds, 60)
+    milliseconds = int((seconds % 1) * 1000)
+    seconds = int(seconds)
+    return f"{int(minutes):02}:{seconds:02}:{milliseconds:03}"
+
+
+def calculate_time_statistics(time_strings):
+    time_deltas = [parse_time_string(ts) for ts in time_strings]
+
+    # Среднее время
+    total_time = sum(time_deltas, datetime.timedelta())
+    average_time = total_time / len(time_deltas)
+
+    # Максимальное и минимальное время
+    max_time = max(time_deltas)
+    min_time = min(time_deltas)
+
+    # Медиана
+    median_time = statistics.median(time_deltas)
+
+    return {
+        'average': format_time_string(average_time),
+        'max': format_time_string(max_time),
+        'min': format_time_string(min_time),
+        'median': format_time_string(median_time),
+    }
+
 @login_required
 def test_results_detail(request):
     test = get_object_or_404(Test, id=request.GET.get('test_id'))
@@ -102,10 +141,22 @@ def test_results_detail(request):
         test_results = TestResult.objects.filter(test=test)
     else:
         test_results = TestResult.objects.filter(test=test, tester=request.user.id)
+
+    # подсчет среднего времени прохождения теста по всем тестировщикам
+    all_time = []
+    for result in test_results:
+        all_time.append(result.duration)
+
+    statistic_by_test = calculate_time_statistics(all_time)
+    average_time = calculate_time_statistics(all_time)['average']
+
     context = {
         'test': test,
         'test_results': test_results
     }
+
+    context.update(statistic_by_test)
+
     return render(request, 'tests/test_results_detail.html', context)
 
 
