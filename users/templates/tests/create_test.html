@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Testing Method Selection</title>
+    <title>Выбор метода тестирования</title>
     {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'styles/users/home.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/tests/create_test.css' %}">
 </head>
 <body>
-    <div class="back-button" onclick="window.location.href='{% url 'login' %}'">&larr;{{ user_name }}</div>
+    <div class="back-button" onclick="window.location.href='{% url 'personal_account' %}'">&larr;{{ user_name }}</div>
     <div class="container">
         <div class="title">Выберете метод тестирования</div>
         <div class="button-grid">

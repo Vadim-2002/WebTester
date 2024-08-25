@@ -3,22 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AB test</title>
+    <title>AB тест</title>
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'styles/tests/ab_test.css' %}">
 </head>
 <body>
     <form id="toolbar">
-        <a href="{% url 'home' %}">Назад</a>
+        <a href="{% url 'create_test' %}">Назад</a>
         {% if user_role == 'author' %}
             <button type="button" id="loadImage">Загрузить</button>
             <button type="button" id="prevImage"><---</button>
             <button type="button" id="nextImage">---></button>
-        {% endif %}
-        <button type="button" id="saveProject">Сохранить</button>
-        <a href="{% url 'my_tests' %}">Мои тесты</a>
-        {% if user_role == 'author' %}
-        <a href="{% url 'send_test' %}?test_id={{ test_id }}">Отправить</a>
+            <button type="button" id="saveProject">Сохранить</button>
+            <a href="{% url 'send_test' %}?test_id={{ test_id }}">Отправить</a>
         {% endif %}
     </form>
     <div id="imageContainer"></div>
@@ -51,6 +48,9 @@
             loadImageButton.addEventListener('click', () => imageInput.click());
             prevImageButton.addEventListener('click', prevImage);
             nextImageButton.addEventListener('click', nextImage);
+            saveProjectButton.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
         {% endif %}
 
         // Модальное окно
@@ -58,10 +58,6 @@
         const testNameInput = document.getElementById('testNameInput');
         const saveTestNameButton = document.getElementById('saveTestNameButton');
         const closeModalButton = document.getElementsByClassName('close')[0];
-
-        saveProjectButton.addEventListener('click', () => {
-            modal.style.display = 'block';
-        });
 
         closeModalButton.addEventListener('click', () => {
             modal.style.display = 'none';

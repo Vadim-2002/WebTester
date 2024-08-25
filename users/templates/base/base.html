@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Мой сайт{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/base/base.css' %}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Личный кабинет</h1>
+            <nav>
+                <ul>
+                    <li><a href="{% url 'my_tests' %}">Команда</a></li>
+                    <li><a href="{% url 'create_test' %}">Создать тест</a></li>
+                    <li><a href="{% url 'my_tests' %}">Мои тесты</a></li>
+                    <li><a href="{% url 'login' %}">Выход</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            {% block content %}
+            <!-- Содержимое страниц будет вставляться сюда -->
+            {% endblock %}
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Winter*IT. Все права защищены.</p>
+        </div>
+    </footer>
+</body>
+</html>

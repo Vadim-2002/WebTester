@@ -8,16 +8,35 @@ from django.views.generic.edit import CreateView
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from .models import Test, TestImage, User, CustomUser, TestResult
+from .models import Test, TestImage, User, CustomUser, TestResult, ProfileEditForm
 import json
 
 from .forms import CustomUserCreationForm
 
 
-def home(request):
-    user_name = request.user.username
+@login_required
+def edit_profile(request):
+    if request.method == 'POST':
+        form = ProfileEditForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            user = form.save()
+            print(user.username)
+            user.save()
+            return redirect('personal_account')
+    else:
+        form = ProfileEditForm(instance=request.user)
 
-    return render(request, "users/home.html", {'user_name': user_name})
+    return render(request, 'users/edit_profile.html', {'form': form})
+
+
+def create_test(request):
+    user_name = request.user.username
+    return render(request, "tests/create_test.html", {'user_name': user_name})
+
+
+def personal_account(request):
+    user_name = request.user.username
+    return render(request, "users/personal_account.html", {'user_name': user_name})
 
 
 @login_required
