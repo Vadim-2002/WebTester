@@ -1,0 +1,30 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Личный кабинет{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="user-info">
+        <h2>Здравствуйте, {{user.username}}!</h2>
+        <p>Имя: {{ user.first_name }}</p>
+        <p>Отчество: {{ user.middle_name }}</p>
+        <p>Фамилия: {{ user.last_name }}</p>
+        <p>Роль: {{ user.role }}</p>
+        <p>Email: {{ user.email }}</p>
+        <p>Дата регистрации: {{ user.date_joined|date:"d.m.Y" }}</p>
+        {% if user.avatar_base64 %}
+        <div class="profile-avatar">
+            <img src="data:image/jpeg;base64,{{ user.avatar_base64 }}" alt="Avatar" />
+        </div>
+        {% endif %}
+    </section>
+
+    <section class="actions">
+        <h3>Ваши действия</h3>
+        <ul>
+            <li><a href="{% url 'edit_profile' %}">Редактировать профиль</a></li>
+            <li><a href="{% url 'change_password' %}">Изменить пароль</a></li>
+        </ul>
+    </section>
+</div>
+{% endblock %}

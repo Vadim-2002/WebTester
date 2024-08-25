@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Tests</title>
+    <title>Мои тесты</title>
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'styles/tests/my_tests.css' %}">
     <script>
@@ -28,7 +28,7 @@
 </head>
 <body>
     <h1>Мои тесты</h1>
-    <a href="{% url 'home' %}">Вернуться</a>
+    <a href="{% url 'personal_account' %}">Вернуться</a>
     <ul>
         {% for test in tests %}
             <li>

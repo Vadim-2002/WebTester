@@ -1,6 +1,9 @@
+import base64
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.contrib.auth import get_user_model
+from django import forms
 
 
 class CustomUser(AbstractUser):
@@ -8,10 +11,40 @@ class CustomUser(AbstractUser):
         ('author', 'Автор'),
         ('tester', 'Тестировщик'),
     )
+    middle_name = models.CharField(max_length=30, blank=True, null=True)
+    avatar_base64 = models.TextField(blank=True, null=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+
+    def save_avatar(self, avatar_file):
+        """
+        This method encodes the avatar file in base64 and saves it in the database.
+        """
+        if avatar_file:
+            encoded_string = base64.b64encode(avatar_file.read()).decode('utf-8')
+            self.avatar_base64 = encoded_string
+            self.save()
 
 
 User = get_user_model()
+
+
+class ProfileEditForm(forms.ModelForm):
+    first_name = forms.CharField(max_length=30, required=False, label='Имя')
+    last_name = forms.CharField(max_length=30, required=False, label='Фамилия')
+    middle_name = forms.CharField(max_length=30, required=False, label='Отчество')
+    avatar = forms.ImageField(required=False, label='Аватар')
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'middle_name', 'avatar']
+
+    def save(self, commit=True):
+        user = super(ProfileEditForm, self).save(commit=False)
+        if 'avatar' in self.cleaned_data and self.cleaned_data['avatar']:
+            user.save_avatar(self.cleaned_data['avatar'])
+        if commit:
+            user.save()
+        return user
 
 
 class Test(models.Model):
