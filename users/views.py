@@ -9,8 +9,13 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from .models import Test, TestImage, User, CustomUser, TestResult, ProfileEditForm
 import json
+import datetime
 
 from .forms import CustomUserCreationForm
+
+
+def main_page(request):
+    return render(request, "main.html")
 
 
 @login_required
@@ -27,11 +32,13 @@ def edit_profile(request):
     return render(request, 'users/edit_profile.html', {'form': form})
 
 
+@login_required
 def create_test(request):
     user_name = request.user.username
     return render(request, "tests/create_test.html", {'user_name': user_name})
 
 
+@login_required
 def personal_account(request):
     user_name = request.user.username
     return render(request, "users/personal_account.html", {'user_name': user_name})
@@ -114,9 +121,6 @@ def submit_test(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
 
 
-import datetime
-
-
 def parse_time_string(time_string):
     minutes, seconds, milliseconds = map(int, time_string.split(':'))
     return datetime.timedelta(minutes=minutes, seconds=seconds, milliseconds=milliseconds)
@@ -151,6 +155,7 @@ def calculate_time_statistics(time_strings):
         'median': format_time_string(median_time),
     }
 
+
 @login_required
 def test_results_detail(request):
     test = get_object_or_404(Test, id=request.GET.get('test_id'))
@@ -178,6 +183,7 @@ def test_results_detail(request):
 
 
 @csrf_exempt
+@login_required
 def save_test_results(request):
     if request.method == 'POST':
         try:
