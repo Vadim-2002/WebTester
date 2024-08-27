@@ -1,6 +1,5 @@
 import statistics
 
-from django.db.models import Q, Avg, ExpressionWrapper, DurationField, F
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -20,7 +19,6 @@ def edit_profile(request):
         form = ProfileEditForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             user = form.save()
-            print(user.username)
             user.save()
             return redirect('personal_account')
     else:
