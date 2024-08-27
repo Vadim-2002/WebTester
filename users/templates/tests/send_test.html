@@ -6,6 +6,7 @@
     <title>Отправить тест</title>
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'styles/tests/send_test.css' %}">
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
 </head>
 <body>
     <form id="sendTestForm" method="POST" action="{% url 'submit_test' %}">
