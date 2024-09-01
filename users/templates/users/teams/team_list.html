@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мои тесты</title>
+    <title>Список команд</title>
     {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'styles/tests/my_tests.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/users/team_list.css' %}">
     <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
     <script>
-        function confirmDelete(testId) {
+        function confirmDelete(teamId) {
             const modal = document.getElementById('deleteModal');
             const deleteButton = document.getElementById('confirmDeleteButton');
-            deleteButton.setAttribute('data-test-id', testId);
+            deleteButton.setAttribute('data-team-id', teamId);
             modal.style.display = 'block';
         }
 
@@ -20,27 +20,27 @@
             modal.style.display = 'none';
         }
 
-        function deleteTest() {
+        function deleteTeam() {
             const deleteButton = document.getElementById('confirmDeleteButton');
-            const testId = deleteButton.getAttribute('data-test-id');
-            window.location.href = `{% url 'delete_test' %}?test_id=${testId}`;
+            const teamId = deleteButton.getAttribute('data-team-id');
+            const deleteUrl = `{% url 'delete_team' 0 %}`.replace('/0/', `/${teamId}/`);
+            window.location.href = deleteUrl;
         }
     </script>
 </head>
 <body>
-    <h1>Мои тесты</h1>
+    <a href="{% url 'create_team' %}">Создать</a>
+    <h1>Список команд</h1>
     <a href="{% url 'personal_account' %}">Вернуться</a>
     <ul>
-        {% for test in tests %}
+        {% for team in teams %}
             <li>
-                <a href="{% url 'ab_test' %}?test_id={{ test.id }}">{{ test.name }}</a>
-                <a href="{% url 'test_results_detail' test.id %}">Результаты</a>
-                {% if user_role == 'author' %}
-                    <a onclick="confirmDelete({{ test.id }})">🗑️</a>
-                {% endif %}
+                <span>{{ team.name }}</span>
+                <a href="{% url 'team_detail' team.id %}">Подробнее</a>
+                <a onclick="confirmDelete({{ team.id }})">🗑️</a>
             </li>
         {% empty %}
-            <li>Тесты не найдены.</li>
+            <li>Команды не найдены.</li>
         {% endfor %}
     </ul>
 
@@ -48,8 +48,8 @@
     <div id="deleteModal" class="modal" style="display:none;">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
-            <h2>Вы уверены, что хотите удалить этот тест?</h2>
-            <button id="confirmDeleteButton" onclick="deleteTest()">Удалить</button>
+            <h2>Вы уверены, что хотите удалить эту команду?</h2>
+            <button id="confirmDeleteButton" onclick="deleteTeam()">Удалить</button>
             <button onclick="closeModal()">Отмена</button>
         </div>
     </div>
