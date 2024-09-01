@@ -1,22 +1,20 @@
+/* my_tests.css */
 body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f4f4;
-    color: #333;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
     margin: 0;
     padding: 20px;
 }
 
 h1 {
     text-align: center;
-    color: #007BFF;
-    margin-bottom: 20px;
+    color: #333;
 }
 
 a {
-    display: inline-block;
-    color: #007BFF;
     text-decoration: none;
-    font-weight: bold;
+    color: #3498db;
+    margin-right: 10px;
 }
 
 a:hover {
@@ -28,88 +26,55 @@ ul {
     padding: 0;
 }
 
-ul li {
-    background: #fff;
+li {
+    background-color: #fff;
     margin: 10px 0;
     padding: 15px;
     border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-ul li a {
-    display: block;
+button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
 }
 
-ul li a:hover {
-    background: #f9f9f9;
+button:hover {
+    background-color: #c0392b;
 }
 
 .modal {
     display: none;
     position: fixed;
-    z-index: 1;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
-    background-color: rgb(0,0,0);
-    background-color: rgba(0,0,0,0.4);
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
 }
 
 .modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
+    background-color: #fff;
     padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
+    border-radius: 5px;
+    text-align: center;
 }
 
 .close {
-    color: #aaa;
     float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close:hover,
-.close:focus {
-    color: black;
-    text-decoration: none;
+    font-size: 18px;
     cursor: pointer;
 }
 
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgb(0,0,0);
-    background-color: rgba(0,0,0,0.4);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-}
-
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close:hover,
-.close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
+.close:hover {
+    color: #e74c3c;
 }

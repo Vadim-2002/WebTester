@@ -28,6 +28,14 @@ class CustomUser(AbstractUser):
 User = get_user_model()
 
 
+class Team(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    testers = models.ManyToManyField(User, related_name='teams', blank=True)
+
+    def __str__(self):
+        return self.name
+
+
 class ProfileEditForm(forms.ModelForm):
     first_name = forms.CharField(max_length=30, required=False, label='Имя')
     last_name = forms.CharField(max_length=30, required=False, label='Фамилия')

@@ -7,11 +7,11 @@ from django.views.generic.edit import CreateView
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from .models import Test, TestImage, User, CustomUser, TestResult, ProfileEditForm
+from .models import Test, TestImage, User, CustomUser, TestResult, ProfileEditForm, Team
 import json
 import datetime
 
-from .forms import CustomUserCreationForm
+from .forms import CustomUserCreationForm, TeamForm
 
 
 def main_page(request):
@@ -157,8 +157,8 @@ def calculate_time_statistics(time_strings):
 
 
 @login_required
-def test_results_detail(request):
-    test = get_object_or_404(Test, id=request.GET.get('test_id'))
+def test_results_detail(request, test_id):
+    test = get_object_or_404(Test, id=test_id)
     if test.user.id == request.user.id:
         test_results = TestResult.objects.filter(test=test)
     else:
@@ -226,6 +226,43 @@ def delete_test(request):
             return redirect('my_tests')
 
     return redirect('my_tests')
+
+
+@login_required
+def create_team(request):
+    if request.method == 'POST':
+        team_name = request.POST.get('team_name')
+        tester_ids = request.POST.getlist('testers')
+
+        # Создание новой команды
+        team = Team.objects.create(name=team_name)
+        team.testers.set(tester_ids)
+        team.save()
+
+        return redirect('teams')
+
+    testers = User.objects.filter(role='tester')
+    return render(request, 'users/teams/create_team.html', {'testers': testers})
+
+
+@login_required
+def team_list(request):
+    teams = Team.objects.all()
+    return render(request, 'users/teams/team_list.html', {'teams': teams})
+
+
+@login_required
+def team_detail(request, team_id):
+    team = get_object_or_404(Team, id=team_id)
+    return render(request, 'users/teams/team_detail.html', {'team': team})
+
+
+@login_required
+def delete_team(request, team_id):
+    team = get_object_or_404(Team, id=team_id)
+    if request.method == 'GET':
+        team.delete()
+    return redirect('teams')
 
 
 class SignUp(CreateView):

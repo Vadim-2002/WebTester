@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание команды</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/users/teams/create_team.css' %}">
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
+    <script>
+        // Функция для фильтрации тестировщиков на основе ввода в поле поиска
+        function filterTesters() {
+            const input = document.getElementById('testerSearch');
+            const filter = input.value.toLowerCase();
+            const testerList = document.getElementById('testerList');
+            const testers = testerList.getElementsByTagName('li');
+
+            for (let i = 0; i < testers.length; i++) {
+                const name = testers[i].textContent || testers[i].innerText;
+                if (name.toLowerCase().indexOf(filter) > -1) {
+                    testers[i].style.display = '';
+                } else {
+                    testers[i].style.display = 'none';
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Создать команду</h1>
+    <a href="{% url 'teams' %}">Вернуться к списку команд</a>
+    <form method="POST" action="{% url 'create_team' %}">
+        {% csrf_token %}
+        <label for="teamName">Название команды:</label>
+        <input type="text" id="teamName" name="team_name" required><br><br>
+
+        <label for="testerSearch">Поиск тестировщика:</label>
+        <input type="text" id="testerSearch" onkeyup="filterTesters()" placeholder="Поиск по имени..."><br><br>
+
+        <ul id="testerList">
+            {% for tester in testers %}
+                <li>
+                    <label>
+                        <input type="checkbox" name="testers" value="{{ tester.id }}">
+                        {{ tester.username }}
+                    </label>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <button type="submit">Создать команду</button>
+    </form>
+</body>
+</html>
