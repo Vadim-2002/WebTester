@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Детали команды</title>
+    <title>Состав команды</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/users/teams/team_detail.css' %}">
 </head>
 <body>
-    <h1>Детали команды: {{ team.name }}</h1>
+    <h1>{{ team.name }}</h1>
     <p>Тестировщики:</p>
     <ul>
         {% for tester in team.testers.all %}

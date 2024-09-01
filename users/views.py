@@ -231,13 +231,18 @@ def delete_test(request):
 @login_required
 def create_team(request):
     if request.method == 'POST':
-        form = TeamForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('teams')  # Перенаправляем на страницу с командой после сохранения
-    else:
-        form = TeamForm()
-    return render(request, 'users/teams/create_team.html', {'form': form})
+        team_name = request.POST.get('team_name')
+        tester_ids = request.POST.getlist('testers')
+
+        # Создание новой команды
+        team = Team.objects.create(name=team_name)
+        team.testers.set(tester_ids)
+        team.save()
+
+        return redirect('teams')
+
+    testers = User.objects.filter(role='tester')
+    return render(request, 'users/teams/create_team.html', {'testers': testers})
 
 
 @login_required
