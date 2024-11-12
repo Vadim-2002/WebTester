@@ -92,3 +92,13 @@ class TestResult(models.Model):
             milliseconds = duration_td.microseconds // 1000
             self.duration = f"{int(minutes):02}:{int(seconds):02}:{milliseconds:03}"
         super().save(*args, **kwargs)
+
+
+class Message(models.Model):
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    message = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Message from {self.sender} to {self.recipient} at {self.timestamp}'
