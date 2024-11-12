@@ -7,7 +7,7 @@ from django.views.generic.edit import CreateView
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from .models import Test, TestImage, User, CustomUser, TestResult, ProfileEditForm, Team
+from .models import Test, TestImage, User, CustomUser, TestResult, ProfileEditForm, Team, Message
 import json
 import datetime
 
@@ -263,6 +263,41 @@ def delete_team(request, team_id):
     if request.method == 'GET':
         team.delete()
     return redirect('teams')
+
+
+# Страница для просмотра и отправки сообщений
+@login_required
+def messages_view(request, recipient_id):
+    recipient = User.objects.get(id=recipient_id)
+
+    # Если POST-запрос, то это отправка нового сообщения
+    if request.method == 'POST':
+        message_content = request.POST.get('message')
+        Message.objects.create(sender=request.user, recipient=recipient, message=message_content)
+        return JsonResponse({'status': 'Сообщение отправлено'})
+
+    # Получение всех сообщений между пользователем и получателем
+    messages = Message.objects.filter(
+        sender__in=[request.user, recipient],
+        recipient__in=[request.user, recipient]
+    ).order_by('timestamp')
+
+    return render(request, 'messages/inbox.html', {'messages': messages, 'recipient': recipient})
+
+
+# AJAX для динамического обновления сообщений
+@login_required
+def get_messages_ajax(request, recipient_id):
+    recipient = User.objects.get(id=recipient_id)
+    messages = Message.objects.filter(
+        sender__in=[request.user, recipient],
+        recipient__in=[request.user, recipient]
+    ).order_by('timestamp')
+
+    messages_list = [{'sender': msg.sender.username, 'message': msg.message, 'timestamp': msg.timestamp} for msg in
+                     messages]
+
+    return JsonResponse({'messages': messages_list})
 
 
 class SignUp(CreateView):

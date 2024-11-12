@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат с {{ recipient.username }}</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/messages/inbox.css' %}">
+</head>
+<body>
+    <div class="chat-container">
+       <a href="{% url 'teams' %}" class="back-btn">Назад</a>
+        <h2>Чат с {{ recipient.username }}</h2>
+
+        <div id="messages-container">
+            <ul id="messages-list">
+                {% for message in messages %}
+                    <li class="{% if message.sender == user %}sent{% else %}received{% endif %}">
+                        <strong>{{ message.sender.username }}:</strong>
+                        <span>{{ message.message }}</span>
+                        <em>{{ message.timestamp|date:"H:i" }}</em>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <form id="send-message-form">
+            {% csrf_token %}
+            <textarea id="message-content" name="message" rows="3" placeholder="Введите сообщение..."></textarea>
+            <button type="submit" class="send-btn">Отправить</button>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Отправка сообщения через AJAX
+        $('#send-message-form').submit(function(e) {
+            e.preventDefault();
+
+            $.ajax({
+                type: 'POST',
+                url: '',
+                data: {
+                    'message': $('#message-content').val(),
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    $('#message-content').val('');
+                    loadMessages();
+                }
+            });
+        });
+
+        // Функция для загрузки новых сообщений
+        function loadMessages() {
+            $.ajax({
+                url: '{% url "get_messages_ajax" recipient_id=recipient.id %}',
+                method: 'GET',
+                success: function(data) {
+                    $('#messages-list').empty();
+                    data.messages.forEach(function(message) {
+                        const messageClass = message.sender === '{{ user.username }}' ? 'sent' : 'received';
+                        $('#messages-list').append(
+                            `<li class="${messageClass}">
+                                <strong>${message.sender}:</strong> <span>${message.message}</span> <em>${message.timestamp}</em>
+                            </li>`
+                        );
+                    });
+                }
+            });
+        }
+
+        // Автоматическое обновление сообщений каждые 5 секунд
+        setInterval(loadMessages, 5000);
+    </script>
+</body>
+</html>

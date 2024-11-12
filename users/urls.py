@@ -38,5 +38,9 @@ urlpatterns = [
      path('teams', views.team_list, name='teams'),
      path('teams/create/', views.create_team, name='create_team'),
      path('teams/delete/<int:team_id>/', views.delete_team, name='delete_team'),
-     path('teams/<int:team_id>/', views.team_detail, name='team_detail')
+     path('teams/<int:team_id>/', views.team_detail, name='team_detail'),
+
+     # Работа с сообщениями
+     path('messages/<int:recipient_id>/', views.messages_view, name='messages'),
+     path('get_messages_ajax/<int:recipient_id>/', views.get_messages_ajax, name='get_messages_ajax'),
 ]
