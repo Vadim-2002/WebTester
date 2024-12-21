@@ -61,7 +61,9 @@ def ab_test(request):
                 'rectangles': test_image.rectangles,
                 'points': test_image.points
             })
-        return render(request, "tests/ab_test.html", {'user_role': user_role, 'test_data': json.dumps(test_data), 'test_id': test_id})
+        return render(request, "tests/ab_test.html",
+                      {'user_role': user_role, 'test_data': json.dumps(test_data), 'test_id': test_id})
+
     return render(request, "tests/ab_test.html", {'user_role': user_role})
 
 
@@ -235,7 +237,7 @@ def create_team(request):
         tester_ids = request.POST.getlist('testers')
 
         # Создание новой команды
-        team = Team.objects.create(name=team_name)
+        team = Team.objects.create(name=team_name, leader=request.user)
         team.testers.set(tester_ids)
         team.save()
 
@@ -247,7 +249,14 @@ def create_team(request):
 
 @login_required
 def team_list(request):
-    teams = Team.objects.all()
+    # Проверяем, является ли пользователь тестировщиком
+    if request.user.role == 'tester':
+        # Получаем команды, в которых текущий пользователь является тестировщиком
+        teams = Team.objects.filter(testers=request.user)
+    else:
+        # Если пользователь не тестировщик, возвращаем команды, которые он создал
+        teams = Team.objects.filter(leader=request.user)
+
     return render(request, 'users/teams/team_list.html', {'teams': teams})
 
 
@@ -260,7 +269,7 @@ def team_detail(request, team_id):
 @login_required
 def delete_team(request, team_id):
     team = get_object_or_404(Team, id=team_id)
-    if request.method == 'GET':
+    if request.method == 'GET' and team.leader == request.user:
         team.delete()
     return redirect('teams')
 

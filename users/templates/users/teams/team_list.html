@@ -35,9 +35,11 @@
     <ul>
         {% for team in teams %}
             <li>
-                <span>{{ team.name }}</span>
+                <span>{{ team.name }} (Лидер: {{ team.leader.username }})</span>
                 <a href="{% url 'team_detail' team.id %}">Подробнее</a>
+                {% if  team.leader == request.user %}
                 <a onclick="confirmDelete({{ team.id }})">🗑️</a>
+                {% endif %}
             </li>
         {% empty %}
             <li>Команды не найдены.</li>

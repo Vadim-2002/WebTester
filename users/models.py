@@ -30,6 +30,7 @@ User = get_user_model()
 
 class Team(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    leader = models.ForeignKey(User, on_delete=models.CASCADE)
     testers = models.ManyToManyField(User, related_name='teams', blank=True)
 
     def __str__(self):
